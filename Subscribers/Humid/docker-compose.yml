@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+ subscriber:
+  build: .
+  container_name: humid-subscriber
+  working_dir: /Humid
+  network_mode: host
+  restart: on-failure
