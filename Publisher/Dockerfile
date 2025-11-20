@@ -2,13 +2,18 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy ONLY what we need:
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libgpiod2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY publisher.py .
 
-# If the repo has other modules you want to import (like sensor helpers),
-# you can copy the whole repo instead:
-# COPY . .
-
-RUN pip install --no-cache-dir paho-mqtt
+RUN pip install --no-cache-dir \
+    paho-mqtt \
+    w1thermsensor \
+    adafruit-circuitpython-dht \
+    adafruit-blinka
 
 CMD ["python", "publisher.py"]
