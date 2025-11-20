@@ -8,15 +8,10 @@ from w1thermsensor import W1ThermSensor
 import board
 import adafruit_dht
 
-# ---------- SENSOR SETUP ----------
 
-# 1-Wire temperature sensor (e.g. DS18B20)
 thermal = W1ThermSensor()
 
-# DHT11 on GPIO22 (BCM) -> physical pin 15
 humid = adafruit_dht.DHT11(board.D22)
-
-# ---------- MQTT SETUP ----------
 
 BROKER_IP = "10.95.102.161"
 BROKER_PORT = 1884
@@ -36,14 +31,13 @@ try:
     while True:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Read temperature from 1-Wire sensor (°C)
         temp = thermal.get_temperature()
         temp_str = f"{temp:.2f}"
 
-        # Read humidity (and optional temp) from DHT11
+   
         try:
             humidity = humid.humidity
-            dht_temp = humid.temperature  # if you want to log it too
+            dht_temp = humid.temperature 
 
             if humidity is None:
                 print("Failed to read from DHT11 sensor")
@@ -58,7 +52,6 @@ try:
                 print(message)
 
         except RuntimeError as e:
-            # DHT11 can be flaky; ignore occasional bad reads
             print(f"DHT11 read error: {e}")
 
         time.sleep(5)
