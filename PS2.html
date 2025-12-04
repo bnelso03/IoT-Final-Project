@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IoT Environment Monitor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Tailwind via CDN for easy responsive styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* Make iframes responsive while keeping a fixed aspect ratio */
+    .panel-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 ratio */
+      overflow: hidden;
+      border-radius: 0.75rem;
+      background: #0f172a;
+    }
+
+    .panel-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900">
+
+  <!-- Top Bar -->
+  <header class="bg-slate-900 text-slate-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <div class="h-9 w-9 rounded-full bg-emerald-400 flex items-center justify-center text-slate-900 font-bold text-lg">
+          IoT
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold leading-tight">
+            Environment Monitor
+          </h1>
+          <p class="text-xs text-slate-300">
+            Raspberry Pi · Prometheus · Grafana
+          </p>
+        </div>
+      </div>
+      <div class="text-right text-xs sm:text-sm">
+        <p id="last-refresh" class="font-mono">
+          Last update: —
+        </p>
+        <p class="text-slate-300">
+          Status: <span id="system-status-text" class="font-semibold">Unknown</span>
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-4 sm:py-6 space-y-6">
+
+    <!-- ALERT STATE BANNER -->
+    <section aria-label="Alert state">
+  <div id="alert-card"
+       class="rounded-2xl p-4 sm:p-5 bg-slate-800 text-slate-50 flex flex-col gap-4">
+
+    <!-- Alert pill + text -->
+    <div class="flex flex-col sm:flex-row gap-3 sm:gap-5 items-start sm:items-center">
+      <div id="alert-pill"
+           class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-600">
+        ALERT: UNKNOWN
+      </div>
+
+      <div class="flex-1">
+        <h2 class="text-base sm:text-lg font-semibold">
+          Current Alert State:
+          <span id="alert-state-text">Unknown</span>
+        </h2>
+        <p id="alert-description"
+           class="text-xs sm:text-sm text-slate-200 mt-1">
+          Waiting for sensor data from Prometheus...
+        </p>
+      </div>
+    </div>
+
+    <!-- Current temperature, humidity & Grafana live gauge -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs sm:text-sm w-full">
+
+      <!-- Temperature -->
+      <div class="bg-slate-900/60 rounded-xl px-3 py-3">
+        <p class="text-slate-400">Current Temperature</p>
+        <p id="current-temp"
+           class="text-2xl font-bold mt-1">
+          — °C
+        </p>
+      </div>
+
+      <!-- Humidity -->
+      <div class="bg-slate-900/60 rounded-xl px-3 py-3">
+        <p class="text-slate-400">Current Humidity</p>
+        <p id="current-humidity"
+           class="text-2xl font-bold mt-1">
+          — %
+        </p>
+      </div>
+
+      <!-- Grafana gauge (your iframe) -->
+      <div class="bg-slate-900/60 rounded-xl overflow-hidden">
+        <iframe
+          class="grafana-frame w-full h-40 sm:h-full"
+          src="http://localhost:3000/d-solo/iot-pi-env-dashboard/iot-e28093-raspberry-pi-environment-dashboard?orgId=1&from=now-15m&to=now&timezone=browser&refresh=5s&theme=light&panelId=1&__feature.dashboardSceneSolo=true"
+          loading="lazy">
+        </iframe>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+    <!-- GRAFANA PANELS -->
+    <section aria-label="Grafana panels" class="space-y-4">
+      <div class="flex items-center justify-between gap-2">
+        <h2 class="text-base sm:text-lg font-semibold">
+          Live Dashboard Panels
+        </h2>
+        <span class="text-xs text-slate-500">
+          Data source: Grafana (Prometheus)
+        </span>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- Temperature Panel -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
+          <h3 class="text-sm font-semibold">Current Temperature Gauge</h3>
+          <p class="text-xs text-slate-600">
+            Grafana panel showing the latest temperature reading from your Raspberry Pi.
+          </p>
+          <div class="panel-wrapper">
+            <!-- Replace with your actual Grafana share link -->
+            <iframe
+              class="grafana-frame"
+              src="http://localhost:3000/d-solo/iot-pi-env-dashboard/iot-e28093-raspberry-pi-environment-dashboard?orgId=1&from=now-15m&to=now&timezone=browser&refresh=5s&theme=light&panelId=2&__feature.dashboardSceneSolo=true"
+              loading="lazy">
+            </iframe>
+          </div>
+        </div>
+
+        <!-- Humidity Panel -->
+        <div class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
+          <h3 class="text-sm font-semibold">Current Humidity Gauge</h3>
+          <p class="text-xs text-slate-600">
+            Grafana panel showing the latest humidity reading from your Raspberry Pi.
+          </p>
+          <div class="panel-wrapper">
+            <!-- Replace with your actual Grafana share link -->
+            <iframe
+              class="grafana-frame"
+              src="http://localhost:3000/d-solo/iot-pi-env-dashboard/iot-e28093-raspberry-pi-environment-dashboard?orgId=1&from=now-15m&to=now&timezone=browser&refresh=5s&theme=light&panelId=3&__feature.dashboardSceneSolo=true"
+              loading="lazy">
+            </iframe>
+          </div>
+        </div>
+      </div>
+
+      <!-- Third visualization (e.g., averages/age/status) -->
+      <div class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
+        <h3 class="text-sm font-semibold">Averages & Sensor Age</h3>
+        <p class="text-xs text-slate-600">
+          Grafana panel showing averages, sensor age, or other metrics such as MQTT status.
+        </p>
+        <div class="panel-wrapper">
+          <!-- Replace with another Grafana share link -->
+          <iframe
+              class="grafana-frame"
+              src="http://localhost:3000/d-solo/iot-pi-env-dashboard/iot-e28093-raspberry-pi-environment-dashboard?orgId=1&from=now-15m&to=now&timezone=browser&refresh=5s&theme=light&panelId=4&__feature.dashboardSceneSolo=true"
+              loading="lazy">
+            </iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER / SMALL NOTES -->
+    <footer class="py-4 text-center text-[11px] text-slate-500">
+      IoT Monitoring System · CS 43603 – Internet of Things Development · Fall 2025
+    </footer>
+  </main>
+
+  <!-- JS: Query Prometheus directly to drive the alert banner -->
+  <script>
+    // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    // SET THIS TO YOUR PROMETHEUS HTTP API BASE URL
+    // Example: "http://prometheus.local:9090/api/v1/query"
+    const PROMETHEUS_BASE_URL = "http://PROMETHEUS_HOST:9090/api/v1/query";
+    // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    const alertCard = document.getElementById("alert-card");
+    const alertPill = document.getElementById("alert-pill");
+    const alertStateText = document.getElementById("alert-state-text");
+    const alertDescription = document.getElementById("alert-description");
+    const currentTempEl = document.getElementById("current-temp");
+    const currentHumidityEl = document.getElementById("current-humidity");
+    const systemStatusText = document.getElementById("system-status-text");
+    const lastRefreshEl = document.getElementById("last-refresh");
+
+    function setLastRefresh() {
+      const now = new Date();
+      lastRefreshEl.textContent = "Last update: " + now.toLocaleString();
+    }
+
+    // Helper: query a single Prometheus expression and return its numeric value (or null)
+    async function queryPrometheus(expr) {
+      const url = `${PROMETHEUS_BASE_URL}?query=${encodeURIComponent(expr)}`;
+      const res = await fetch(url, { cache: "no-cache" });
+      if (!res.ok) {
+        throw new Error("Prometheus HTTP " + res.status);
+      }
+
+      const data = await res.json();
+      const result = data.data && data.data.result;
+      if (!result || result.length === 0) {
+        return null;
+      }
+      return parseFloat(result[0].value[1]);
+    }
+
+    function applyAlertState(state, message, temp, humidity) {
+      const s = (state || "unknown").toLowerCase();
+
+      let bgCard = "bg-slate-800";
+      let pillBg = "bg-slate-600";
+      let pillText = "ALERT: UNKNOWN";
+      let statusText = "Unknown";
+
+      if (s === "normal") {
+        bgCard = "bg-emerald-900";
+        pillBg = "bg-emerald-400 text-slate-900";
+        pillText = "ALERT: NORMAL";
+        statusText = "Normal";
+      } else if (s === "warning") {
+        bgCard = "bg-amber-900";
+        pillBg = "bg-amber-400 text-slate-900";
+        pillText = "ALERT: WARNING";
+        statusText = "Warning";
+      } else if (s === "critical") {
+        bgCard = "bg-red-900";
+        pillBg = "bg-red-400 text-slate-900";
+        pillText = "ALERT: CRITICAL";
+        statusText = "Critical";
+      }
+
+      // Reset background classes only
+      alertCard.className = alertCard.className
+        .replace(/bg-[^\s]+/g, "")
+        .trim();
+      alertCard.classList.add(bgCard, "text-slate-50");
+
+      alertPill.className = "px-3 py-1 rounded-full text-xs font-semibold " + pillBg;
+      alertPill.textContent = pillText;
+      alertStateText.textContent = statusText;
+      systemStatusText.textContent = statusText;
+      alertDescription.textContent = message || "No alert description available.";
+
+      if (typeof temp === "number") {
+        currentTempEl.textContent = temp.toFixed(1) + " °C";
+      }
+      if (typeof humidity === "number") {
+        currentHumidityEl.textContent = humidity.toFixed(1) + " %";
+      }
+
+      setLastRefresh();
+    }
+
+    async function fetchMetricsAndUpdate() {
+      try {
+        const [temp, humidity, age] = await Promise.all([
+          queryPrometheus("room_temperature_celsius"),
+          queryPrometheus("room_humidity_percent"),
+          queryPrometheus("sensor_age_seconds")
+        ]);
+
+        // Decide alert state based on temperature (and optionally age)
+        let state = "unknown";
+        let message = "No recent sensor data.";
+
+        if (temp != null && humidity != null) {
+          if (temp >= 30) {
+            state = "critical";
+            message = `Temperature ${temp.toFixed(1)}°C above safe limit!`;
+          } else if (temp >= 27) {
+            state = "warning";
+            message = `Temperature ${temp.toFixed(1)}°C approaching upper limit.`;
+          } else {
+            state = "normal";
+            message = "Environment is within normal operating range.";
+          }
+
+          if (age != null && age > 60) {
+            // If data is older than 60s, downgrade to warning about stale data
+            if (state === "normal") {
+              state = "warning";
+              message = "Sensor data is older than 60 seconds. Check connection.";
+            }
+          }
+        }
+
+        applyAlertState(state, message, temp, humidity);
+      } catch (err) {
+        console.error("Failed to fetch metrics from Prometheus:", err);
+        applyAlertState(
+          "unknown",
+          "Error fetching data from Prometheus. Check network / CORS / URL.",
+          null,
+          null
+        );
+      }
+    }
+
+    // Initial load + periodic refresh
+    fetchMetricsAndUpdate();
+    // Refresh every 30 seconds
+    setInterval(fetchMetricsAndUpdate, 30000);
+  </script>
+</body>
+</html>
