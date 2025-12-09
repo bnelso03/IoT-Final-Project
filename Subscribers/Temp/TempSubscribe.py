@@ -18,7 +18,7 @@ start_http_server(8001)
 sensor_id="temp_sensor"
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.on_message = on_message
-client.connect("10.95.102.161", 1884, keepalive = 60)
+client.connect("localhost", 1884, keepalive = 60)
 client.subscribe("temperature/data")
 client.loop_start()
 try:

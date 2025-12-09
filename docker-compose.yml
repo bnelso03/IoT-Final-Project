@@ -1,16 +1,79 @@
+version: "3.9"
+
 services:
+
+  web:
+    image: python:3-slim
+    container_name: simple-web
+    working_dir: /site
+    volumes:
+      - ./webpage:/site
+    command: python3 -m http.server 8080
+    ports:
+      - "8080:8080"
+  publisher:
+    image: publisher:latest
+    build:
+      context: ./Publisher
+    container_name: publisher
+    working_dir: /app
+    privileged: true
+    network_mode: host
+    volumes:
+      - /sys:/sys
+      - /dev:/dev
+
+  humid-subscriber:
+    build:
+      context: ./Subscribers/Humid
+    container_name: humid-subscriber
+    working_dir: /Humid
+    network_mode: host
+
+  temp-subscriber:
+    build:
+      context: ./Subscribers/Temp
+    container_name: temp-subscriber
+    working_dir: /Temp
+    network_mode: host
+
+  cpu-subscriber:
+    build:
+      context: ./Subscribers/CPU
+    container_name: cpu-subscriber
+    working_dir: /CPU
+    network_mode: host
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    network_mode: host
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro,Z
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    network_mode: host
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+
   mosquitto:
     image: eclipse-mosquitto:2
     container_name: mosquitto
     restart: unless-stopped
     ports:
-      - "1884:1884"   # MQTT
+      - "1884:1884"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
     networks:
       - iot
+
+volumes:
+  grafana-storage:
 
 networks:
   iot:

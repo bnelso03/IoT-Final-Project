@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IoT Environment Monitor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    .panel-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      overflow: hidden;
+      border-radius: 0.75rem;
+      background: #0f172a;
+    }
+    .panel-wrapper iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 0;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-900">
+
+  <!-- HEADER -->
+  <header class="bg-slate-900 text-slate-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="h-9 w-9 rounded-full bg-emerald-400 flex items-center justify-center font-bold text-lg text-slate-900">
+          IoT
+        </div>
+        <div>
+          <h1 class="text-lg font-semibold">Environment Monitor</h1>
+          <p class="text-xs text-slate-300">Raspberry Pi · Prometheus · Grafana</p>
+        </div>
+      </div>
+
+      <p id="last-refresh" class="text-xs font-mono">Last update: —</p>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
+    <!-- ALERT + SENSOR BOXES -->
+    <section>
+      <div id="alert-card" class="rounded-2xl p-5 bg-slate-800 text-slate-50 space-y-4">
+
+        <p id="alert-description" class="text-sm text-slate-200">
+          Waiting for sensor data from Prometheus...
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+
+          <!-- Temperature -->
+          <div class="bg-slate-900 rounded-xl p-4">
+            <p class="text-slate-400 text-[11px] uppercase">Temperature</p>
+            <p id="current-temp" class="mt-1 text-2xl font-semibold">-- °C</p>
+          </div>
+
+          <!-- Humidity -->
+          <div class="bg-slate-900 rounded-xl p-4">
+            <p class="text-slate-400 text-[11px] uppercase">Humidity</p>
+            <p id="current-humidity" class="mt-1 text-2xl font-semibold">-- %</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- GRAFANA PANELS -->
+    <section class="rounded-2xl p-5 bg-slate-800 text-slate-50 space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-semibold">Live Dashboard Panels</h2>
+        <span class="text-xs text-slate-400">Grafana · Prometheus</span>
+      </div>
+
+      <!-- Gauge Panel #1 -->
+      <div class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
+        <h3 class="text-sm font-semibold">Temperature Gauge</h3>
+        <p class="text-xs text-slate-600">Live temperature from Raspberry Pi.</p>
+        <div class="panel-wrapper">
+          <iframe src="http://localhost:3000/d-solo/adrpjgv/iot-final?orgId=1&panelId=panel-4&refresh=30s"></iframe>
+        </div>
+      </div>
+
+      <!-- Gauge Panel #2 -->
+      <div class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
+        <h3 class="text-sm font-semibold">Temperature Gauge (2)</h3>
+        <p class="text-xs text-slate-600">Another temperature view.</p>
+        <div class="panel-wrapper">
+          <iframe src="http://localhost:3000/d-solo/adrpjgv/iot-final?orgId=1&panelId=panel-3&refresh=30s"></iframe>
+        </div>
+      </div>
+
+      <!-- Gauge Panel #3 -->
+      <div class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
+        <h3 class="text-sm font-semibold">Humidity Gauge</h3>
+        <p class="text-xs text-slate-600">Live humidity from Raspberry Pi.</p>
+        <div class="panel-wrapper">
+          <iframe src="http://localhost:3000/d-solo/adrpjgv/iot-final?orgId=1&panelId=panel-2&refresh=30s"></iframe>
+        </div>
+      </div>
+    </section>
+
+    <footer class="py-4 text-center text-[11px] text-slate-500">
+      IoT Monitoring System · CS 43603 — Fall 2025
+    </footer>
+
+  </main>
+
+  <!-- JS: Prometheus Integration -->
+  <script>
+    const PROMETHEUS_BASE_URL = "http://localhost:9090/api/v1/query";
+
+    const alertDescription = document.getElementById("alert-description");
+    const currentTempEl = document.getElementById("current-temp");
+    const currentHumidityEl = document.getElementById("current-humidity");
+    const lastRefreshEl = document.getElementById("last-refresh");
+
+    function setLastRefresh() {
+      lastRefreshEl.textContent = "Last update: " + new Date().toLocaleString();
+    }
+
+    async function queryPrometheus(expr) {
+      const url = `${PROMETHEUS_BASE_URL}?query=${encodeURIComponent(expr)}`;
+      const res = await fetch(url);
+
+      if (!res.ok) throw new Error("Prometheus error " + res.status);
+
+      const data = await res.json();
+      if (!data.data.result.length) return null;
+
+      return Number(data.data.result[0].value[1]);
+    }
+
+    function applyState(message, temp, humidity) {
+      currentTempEl.textContent = temp != null ? temp.toFixed(1) + " °C" : "-- °C";
+      currentHumidityEl.textContent = humidity != null ? humidity.toFixed(1) + " %" : "-- %";
+
+      alertDescription.textContent = message;
+      setLastRefresh();
+    }
+
+    async function updateMetrics() {
+      try {
+        const [temp, humidity, age] = await Promise.all([
+          queryPrometheus("room_temperature_celsius"),
+          queryPrometheus("room_humidity_percent"),
+          queryPrometheus("sensor_age_seconds")
+        ]);
+
+        let message = "Environment is normal.";
+
+        if (temp >= 30) message = `Warning: ${temp.toFixed(1)}°C — too hot!`;
+        else if (temp >= 27) message = `Temperature rising: ${temp.toFixed(1)}°C`;
+        if (age > 60) message = "Sensor data is stale (60+ seconds).";
+
+        applyState(message, temp, humidity);
+
+      } catch (err) {
+        console.error(err);
+        applyState("Failed to fetch data from Prometheus.", null, null);
+      }
+    }
+
+    updateMetrics();
+    setInterval(updateMetrics, 30000);
+  </script>
+
+</body>
+</html>
+

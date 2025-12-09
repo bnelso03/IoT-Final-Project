@@ -7,15 +7,16 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
-        libgpiod2 \
-    && rm -rf /var/lib/apt/lists/*
+	    && rm -rf /var/lib/apt/lists/*
 
-COPY publisher.py .
+COPY Publisher.py .
 
 RUN pip install --no-cache-dir \
     paho-mqtt \
     w1thermsensor \
     adafruit-circuitpython-dht \
-    adafruit-blinka
+    adafruit-blinka \
+    RPi-GPIO \
+    gpiozero
 
-CMD ["python", "publisher.py"]
+CMD ["python", "Publisher.py"]
